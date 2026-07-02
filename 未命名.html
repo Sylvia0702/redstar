@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>红星照耀中国 · 闯关</title>
+    <style>
+        /* ===== 全局重置 & 基础 ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, 'PingFang SC', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f5f0eb;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 12px 20px;
+            /* 增加安全区适配 */
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        /* ===== 登录页 ===== */
+        #loginPage {
+            max-width: 440px;
+            width: 100%;
+            background: #fffcf9;
+            border-radius: 28px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.10);
+            padding: 32px 24px 28px;
+            margin: 20px auto;
+            text-align: center;
+            display: block;
+            transition: opacity 0.3s;
+        }
+        #loginPage.hidden {
+            display: none;
+        }
+        #loginPage h1 {
+            font-size: 26px;
+            color: #2c1810;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+        #loginPage .sub {
+            color: #8b6b5a;
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+        #loginPage .input-group {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+        #loginPage .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #3d2a1e;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        #loginPage .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8ddd6;
+            border-radius: 14px;
+            font-size: 16px;
+            background: #fcf8f5;
+            transition: 0.2s;
+            /* 手机输入框优化 */
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        #loginPage .input-group input:focus {
+            border-color: #c0392b;
+            outline: none;
+            background: #fff;
+        }
+        #loginPage .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: #c0392b;
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.25s;
+            box-shadow: 0 6px 20px rgba(192, 57, 43, 0.30);
+            margin-top: 6px;
+            /* 触摸优化 */
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+        }
+        #loginPage .login-btn:active {
+            transform: scale(0.96);
+            background: #a93226;
+        }
+        #loginPage .login-error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+            min-height: 22px;
+        }
+
+        /* ===== 主应用 ===== */
+        #appContainer {
+            max-width: 820px;
+            width: 100%;
+            background: #fffcf9;
+            border-radius: 28px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.10);
+            padding: 20px 16px 16px;
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+        #appContainer.show {
+            display: block;
+        }
+        #appContainer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #c0392b, #e74c3c, #f39c12, #c0392b);
+            background-size: 300% 100%;
+            animation: gradBar 4s ease infinite;
+        }
+        @keyframes gradBar {
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* ===== 顶部栏 ===== */
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin: 4px 0 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #e8ddd6;
+            gap: 6px;
+        }
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #3d2a1e;
+        }
+        .user-status .badge {
+            background: #c0392b;
+            color: #fff;
+            padding: 3px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .user-status .score {
+            background: #fdf2e9;
+            padding: 3px 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #a04028;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .user-status .user-name {
+            font-weight: 600;
+            color: #2c1810;
+            font-size: 15px;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .right-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .right-actions .progress-text {
+            font-size: 12px;
+            color: #7a5f4e;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .rank-btn {
+            background: #f0e8e2;
+            border: none;
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #3d2a1e;
+            cursor: pointer;
+            transition: 0.2s;
+            touch-action: manipulation;
+            white-space: nowrap;
+        }
+        .rank-btn:active {
+            background: #ddd0c7;
+            transform: scale(0.95);
+        }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #d5c0b4;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: #6b4f3e;
+            cursor: pointer;
+            transition: 0.2s;
+            touch-action: manipulation;
+        }
+        .logout-btn:active {
+            background: #eee5df;
+            transform: scale(0.95);
+        }
+
+        /* ===== 关卡标签（移动端横向滚动） ===== */
+        .level-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 10px 0 16px;
+            padding: 0 0 6px;
+            scrollbar-width: none;
+            /* Firefox隐藏滚动条 */;
+        }
+        .level-tabs::-webkit-scrollbar {
+            display: none;
+            /* Chrome/Safari隐藏 */;
+        }
+        .level-tab {
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 2px solid #ddd0c7;
+            background: #faf6f2;
+            font-weight: 600;
+            font-size: 13px;
+            color: #6b4f3e;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 0 0 auto;
+            touch-action: manipulation;
+            white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .level-tab:active {
+            transform: scale(0.94);
+        }
+        .level-tab.active {
+            background: #c0392b;
+            border-color: #c0392b;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(192, 57, 43, 0.25);
+        }
+        .level-tab.locked {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+        .level-tab.locked:active {
+            transform: none;
+        }
+        .level-tab .check {
+            margin-left: 3px;
+            font-size: 13px;
+        }
+
+        /* ===== 题目区 ===== */
+        .question-area {
+            background: #fcf8f5;
+            border-radius: 20px;
+            padding: 18px 16px 16px;
+            border: 1px solid #eee5df;
+            margin-top: 2px;
+            transition: all 0.2s;
+        }
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .q-number {
+            font-weight: 700;
+            color: #c0392b;
+            font-size: 15px;
+        }
+        .q-chapter {
+            color: #8b6b5a;
+            font-size: 12px;
+            background: #f0e8e2;
+            padding: 2px 12px;
+            border-radius: 30px;
+            white-space: nowrap;
+        }
+        .q-text {
+            font-size: 17px;
+            line-height: 1.7;
+            color: #2c1810;
+            margin-bottom: 16px;
+            padding: 4px 0 2px;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        /* ===== 选项（大触摸区域） ===== */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .opt {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 2px solid #e8ddd6;
+            background: #fffcf9;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 15px;
+            line-height: 1.5;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            min-height: 52px;
+        }
+        .opt:active {
+            transform: scale(0.97);
+            border-color: #c0392b;
+        }
+        .opt.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .opt .marker {
+            width: 30px;
+            min-width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f0e8e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: #5a3f2e;
+            flex-shrink: 0;
+        }
+        .opt.selected .marker {
+            background: #c0392b;
+            color: #fff;
+        }
+        .opt.correct {
+            border-color: #27ae60;
+            background: #eafaf1;
+        }
+        .opt.correct .marker {
+            background: #27ae60;
+            color: #fff;
+        }
+        .opt.wrong {
+            border-color: #e74c3c;
+            background: #fdedeb;
+        }
+        .opt.wrong .marker {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .opt.show-correct {
+            border-color: #27ae60;
+            background: #eafaf1;
+        }
+        .opt.show-correct .marker {
+            background: #27ae60;
+            color: #fff;
+        }
+
+        /* ===== 解析 ===== */
+        .explanation {
+            background: #f4ede8;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin: 10px 0 16px;
+            border-left: 5px solid #c0392b;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #2c1810;
+            display: none;
+        }
+        .explanation.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .explanation strong {
+            color: #c0392b;
+        }
+
+        /* ===== 按钮行 ===== */
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        .btn {
+            padding: 12px 28px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            min-height: 48px;
+            min-width: 80px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn-primary {
+            background: #c0392b;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(192, 57, 43, 0.25);
+        }
+        .btn-primary:active {
+            background: #a93226;
+        }
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #d5c0b4;
+            color: #6b4f3e;
+        }
+        .btn-outline:active {
+            background: #f0e8e2;
+        }
+        .btn-success {
+            background: #27ae60;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(39, 174, 96, 0.25);
+        }
+        .btn-success:active {
+            background: #1e8449;
+        }
+
+        /* ===== 完成页 ===== */
+        .finish-box {
+            text-align: center;
+            padding: 20px 6px;
+        }
+        .finish-box .big-icon {
+            font-size: 60px;
+            margin-bottom: 8px;
+        }
+        .finish-box h2 {
+            font-size: 24px;
+            color: #2c1810;
+            margin-bottom: 6px;
+        }
+        .finish-box p {
+            font-size: 15px;
+            color: #5a3f2e;
+            max-width: 400px;
+            margin: 6px auto;
+        }
+        .finish-box .final-score {
+            font-size: 40px;
+            font-weight: 800;
+            color: #c0392b;
+            margin: 12px 0;
+        }
+        .finish-box .btn {
+            margin: 4px 6px;
+        }
+
+        /* ===== 排行榜模态框（移动端优化） ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.50);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 16px;
+            animation: modalFade 0.25s ease;
+        }
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-box {
+            background: #fffcf9;
+            border-radius: 28px;
+            max-width: 520px;
+            width: 100%;
+            padding: 24px 20px 20px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.30);
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            margin: 12px;
+        }
+        .modal-box h2 {
+            font-size: 22px;
+            color: #2c1810;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-box h2 .close-btn {
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            color: #8b6b5a;
+            padding: 0 8px;
+            touch-action: manipulation;
+            line-height: 1;
+        }
+        .modal-box h2 .close-btn:active {
+            transform: scale(0.88);
+        }
+        .modal-box .subtitle {
+            color: #8b6b5a;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+        .rank-list {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 2px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 10px;
+            border-bottom: 1px solid #eee5df;
+            font-size: 15px;
+            align-items: center;
+        }
+        .rank-item:last-child {
+            border-bottom: none;
+        }
+        .rank-item .pos {
+            font-weight: 700;
+            color: #6b4f3e;
+            width: 36px;
+            flex-shrink: 0;
+        }
+        .rank-item .name {
+            flex: 1;
+            font-weight: 500;
+            color: #2c1810;
+            margin: 0 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .rank-item .scr {
+            color: #c0392b;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .rank-item.me {
+            background: #fdf2e9;
+            border-radius: 10px;
+            margin: 2px 0;
+            padding: 10px 10px;
+        }
+        .no-rank {
+            color: #8b6b5a;
+            text-align: center;
+            padding: 30px 0;
+            font-size: 15px;
+        }
+
+        /* ===== 底部 ===== */
+        .footer {
+            text-align: center;
+            color: #b09585;
+            font-size: 13px;
+            padding: 16px 0 4px;
+            border-top: 1px solid #eee5df;
+            margin-top: 16px;
+            width: 100%;
+        }
+        .footer strong {
+            color: #8b6b5a;
+            font-weight: 600;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c1810;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            transition: 0.35s ease;
+            pointer-events: none;
+            z-index: 9999;
+            max-width: 88%;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ===== 移动端专项优化 ===== */
+        @media (max-width: 640px) {
+            body {
+                padding: 8px 8px 16px;
+            }
+            #loginPage {
+                padding: 28px 18px 24px;
+                margin: 12px auto;
+                border-radius: 24px;
+            }
+            #loginPage h1 {
+                font-size: 22px;
+            }
+            #loginPage .input-group input {
+                padding: 12px 14px;
+                font-size: 15px;
+                border-radius: 12px;
+            }
+            #loginPage .login-btn {
+                padding: 14px;
+                font-size: 17px;
+            }
+
+            #appContainer {
+                padding: 14px 10px 12px;
+                border-radius: 24px;
+            }
+            .top-bar {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .user-status .user-name {
+                max-width: 60px;
+                font-size: 13px;
+            }
+            .user-status .badge {
+                font-size: 10px;
+                padding: 2px 10px;
+            }
+            .user-status .score {
+                font-size: 12px;
+                padding: 2px 10px;
+            }
+            .right-actions .progress-text {
+                font-size: 11px;
+            }
+            .rank-btn {
+                font-size: 12px;
+                padding: 4px 12px;
+            }
+            .logout-btn {
+                font-size: 11px;
+                padding: 3px 10px;
+            }
+
+            .level-tabs {
+                gap: 6px;
+                margin: 6px 0 12px;
+            }
+            .level-tab {
+                font-size: 12px;
+                padding: 6px 14px;
+            }
+
+            .question-area {
+                padding: 14px 12px 12px;
+                border-radius: 16px;
+            }
+            .q-text {
+                font-size: 16px;
+                line-height: 1.6;
+            }
+            .q-number {
+                font-size: 14px;
+            }
+            .q-chapter {
+                font-size: 11px;
+            }
+
+            .opt {
+                padding: 12px 14px;
+                font-size: 14px;
+                min-height: 46px;
+                gap: 10px;
+                border-radius: 12px;
+            }
+            .opt .marker {
+                width: 26px;
+                min-width: 26px;
+                height: 26px;
+                font-size: 12px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+                min-height: 44px;
+                min-width: 64px;
+                border-radius: 32px;
+            }
+
+            .explanation {
+                font-size: 13px;
+                padding: 12px 14px;
+                border-radius: 12px;
+            }
+
+            .finish-box .big-icon {
+                font-size: 48px;
+            }
+            .finish-box h2 {
+                font-size: 20px;
+            }
+            .finish-box .final-score {
+                font-size: 32px;
+            }
+
+            .modal-box {
+                padding: 20px 16px 16px;
+                border-radius: 24px;
+                max-height: 85vh;
+            }
+            .modal-box h2 {
+                font-size: 19px;
+            }
+            .rank-item {
+                font-size: 14px;
+                padding: 8px 8px;
+            }
+            .rank-item .pos {
+                width: 30px;
+            }
+
+            .toast {
+                font-size: 13px;
+                padding: 10px 20px;
+                bottom: 20px;
+                max-width: 92%;
+                white-space: normal;
+            }
+
+            .footer {
+                font-size: 12px;
+                padding: 12px 0 2px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .user-status .user-name {
+                max-width: 50px;
+                font-size: 12px;
+            }
+            .user-status .badge {
+                font-size: 9px;
+                padding: 2px 8px;
+            }
+            .user-status .score {
+                font-size: 11px;
+                padding: 2px 8px;
+            }
+            .level-tab {
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+            .q-text {
+                font-size: 15px;
+            }
+            .opt {
+                font-size: 13px;
+                padding: 10px 12px;
+                min-height: 42px;
+            }
+            .btn {
+                font-size: 13px;
+                padding: 8px 16px;
+                min-height: 40px;
+                min-width: 56px;
+            }
+        }
+
+        /* 针对刘海屏/安全区 */
+        @supports (padding: max(0px)) {
+            #appContainer,
+            #loginPage {
+                padding-left: max(16px, env(safe-area-inset-left));
+                padding-right: max(16px, env(safe-area-inset-right));
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 登录页 ===== -->
+    <div id="loginPage">
+        <h1>⭐ 红星照耀中国</h1>
+        <div class="sub">名著知识闯关 · 200题</div>
+        <div class="input-group">
+            <label>📚 学号</label>
+            <input type="text" id="studentIdInput" placeholder="请输入学号" autocomplete="off" inputmode="text">
+        </div>
+        <div class="input-group">
+            <label>👤 姓名</label>
+            <input type="text" id="studentNameInput" placeholder="请输入姓名" autocomplete="off">
+        </div>
+        <button class="login-btn" id="loginBtn">进入闯关 🚀</button>
+        <div class="login-error" id="loginError"></div>
+        <div class="footer" style="border-top:none;margin-top:24px;padding-top:0;">
+            <strong>苏州市立达中学校</strong>
+        </div>
+    </div>
+
+    <!-- ===== 主应用 ===== -->
+    <div id="appContainer">
+        <div class="top-bar">
+            <div class="user-status">
+                <span class="user-name" id="userNameDisplay">👤 同学</span>
+                <span class="badge" id="titleBadge">🪖 新兵蛋子</span>
+                <span class="score" id="scoreDisplay">🏆 0 分</span>
+            </div>
+            <div class="right-actions">
+                <span class="progress-text" id="answeredDisplay">已答 0/200</span>
+                <button class="rank-btn" id="rankBtn">🏆 排行</button>
+                <button class="logout-btn" id="logoutBtn">退出</button>
+            </div>
+        </div>
+
+        <div class="level-tabs" id="levelTabs"></div>
+
+        <div class="question-area" id="questionArea"></div>
+
+        <div class="footer">
+            <strong>苏州市立达中学校</strong> · 暑期名著闯关
+        </div>
+    </div>
+
+    <!-- ===== 排行榜 ===== -->
+    <div class="modal-overlay" id="rankModal">
+        <div class="modal-box">
+            <h2>
+                🏆 积分排行榜
+                <button class="close-btn" id="closeRankBtn">&times;</button>
+            </h2>
+            <div class="subtitle">所有闯关者积分排名</div>
+            <div class="rank-list" id="rankList">
+                <div class="no-rank">暂无数据</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Toast ===== -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ============================================================
+        //  1. 题目数据（200题，完整保留）
+        // ============================================================
+        const QUESTIONS = [
+            { q: '斯诺在中国待了____年。', o: ['5年', '7年', '8年', '10年'], a: 1, e: '斯诺在中国待了7年，他一直想亲自进入红区探明真相。', ch: '第一篇·探寻红色中国' },
+            { q: '斯诺想要亲自进入____区解开谜团。', o: ['红区', '白区', '苏区', '边区'], a: 0, e: '斯诺想要进入红区（红色区域）探明真相。', ch: '第一篇·探寻红色中国' },
+            { q: '1936年6月，斯诺的一位中国密友带给他消息，他从中看到可能进入红区的机会，决定打破持续____年的新闻封锁。', o: ['8年', '9年', '10年', '12年'], a: 1, e: '斯诺决定打破持续9年的新闻封锁。',
+                ch: '第一篇·探寻红色中国' },
+            { q: '斯诺出发前注射了传染病的____。', o: ['疫苗', '血清', '抗生素', '预防针'], a: 0, e: '斯诺出发前注射了传染病的疫苗。', ch: '第一篇·探寻红色中国' },
+            { q: '慢车上，斯诺面对坐着的青年说有钱人害怕红军，____并不怕。', o: ['穷人', '农民', '工人', '学生'], a: 0, e: '青年说有钱人害怕红军，穷人并不怕。', ch: '第一篇·探寻红色中国' },
+            { q: '斯诺到达西安后，拜访了____将军和省主席。', o: ['张学良', '杨虎城', '蒋介石', '邵力子'], a: 1, e: '斯诺拜访了杨虎城将军和省主席。', ch: '第一篇·探寻红色中国' },
+            { q: '在与____的交谈中得知陕北战事已暂停。', o: ['张学良', '杨虎城', '邵力子', '王牧师'], a: 2, e: '在与邵力子的交谈中得知陕北战事已暂停。', ch: '第一篇·探寻红色中国' },
+            { q: '一个在北京的红军指挥员用隐形墨水为斯诺写了一封介绍信给____。', o: ['毛泽东', '周恩来', '彭德怀', '王牧师'], a: 3, e: '介绍信是写给王牧师的。', ch: '第一篇·探寻红色中国' },
+            { q: '王牧师设法安排斯诺坐____的私人飞机去红区。', o: ['张学良', '杨虎城', '蒋介石', '邵力子'], a: 0, e: '王牧师安排斯诺坐张学良的私人飞机去红区。', ch: '第一篇·探寻红色中国' },
+            { q: '最终斯诺乘坐____前往红区。', o: ['火车', '汽车', '飞机', '骡车'], a: 1, e: '斯诺最终乘坐汽车前往红区。', ch: '第一篇·探寻红色中国' },
+            { q: '在汉朝古城遗址，斯诺见到了敌军悬赏五万元首级的共产党人____。', o: ['毛泽东', '周恩来', '彭德怀', '刘志丹'], a: 2, e: '斯诺见到了悬赏五万元的彭德怀。', ch: '第一篇·探寻红色中国' },
+            { q: '斯诺在黎明之前离开西安时，____小时后渡过了____。', o: ['两小时·渭河', '三小时·黄河', '两小时·洛河', '三小时·渭河'], a: 0, e: '两小时后渡过了渭河。', ch: '第一篇·探寻红色中国' },
+            { q: '离开延安后，斯诺越过了"苏区"与"白区"之间的狭长地带，与他同行的只有一个____。', o: ['向导', '骡夫', '红军战士', '农民'], a: 0, e: '与他同行的只有一个向导。',
+            ch: '第一篇·探寻红色中国' },
+            { q: '斯诺到达目的地后，见到了贫农团主席____。', o: ['刘志丹', '刘龙火', '徐海东', '贺龙'], a: 1, e: '见到了贫农团主席刘龙火。', ch: '第一篇·探寻红色中国' },
+            { q: '贫农团主席给斯诺找了一位年轻的向导和一个骡夫前往____。', o: ['保安', '延安', '安塞', '吴起镇'], a: 0, e: '前往保安。', ch: '第一篇·探寻红色中国' },
+            { q: '斯诺在进入安塞途中被____追逐。', o: ['白匪', '土匪', '民团', '国民党军队'], a: 0, e: '被白匪追逐。', ch: '第二篇·前往红都的路上' },
+            { q: '斯诺了解到国民党通过"____"来对地方进行统治和镇压。', o: ['保甲制度', '连坐法', '白色恐怖', '清乡运动'], a: 0, e: '国民党通过"保甲制度"进行统治和镇压。', ch: '第二篇·前往红都的路上' },
+            { q: '途中斯诺遇见的第一个红军是____。', o: ['一个号手', '一个哨兵', '一个骑兵', '一个少年'], a: 0, e: '遇到的第一个红军是一个号手。', ch: '第二篇·前往红都的路上' },
+            { q: '他带领斯诺到达安塞并主动提出再送他去____。', o: ['保安', '延安', '吴起镇', '前线'], a: 0, e: '主动提出送他去保安。', ch: '第二篇·前往红都的路上' },
+            { q: '在这里，斯诺见到了____同志。', o: ['周恩来', '毛泽东', '彭德怀', '林彪'], a: 0, e: '斯诺在这里见到了周恩来同志。', ch: '第二篇·前往红都的路上' },
+            { q: '周恩来给斯诺采访自由，为他安排了为时____天的行程计划。', o: ['60天', '90天', '92天', '120天'], a: 2, e: '安排了92天的行程计划。', ch: '第二篇·前往红都的路上' },
+            { q: '斯诺眼中的周恩来：书生出身的造反者并不是狂热分子，而是一位____。', o: ['思想家', '实干家', '军事家', '政治家'], a: 1, e: '周恩来是一位实干家，善于分析推理，讲究实际经验。',
+                ch: '第二篇·前往红都的路上' },
+            { q: '斯诺同通讯部队的青年一起出发，前往____。', o: ['保安', '延安', '吴起镇', '前线'], a: 0, e: '出发前往保安。', ch: '第二篇·前往红都的路上' },
+            { q: '和斯诺同行的红军指挥员____是个讲故事的好手。', o: ['李长林', '贺龙', '徐海东', '彭德怀'], a: 0, e: '李长林是个讲故事的好手。', ch: '第二篇·前往红都的路上' },
+            { q: '南昌起义贺龙的部队失败后，他和____转移到汕头。', o: ['叶挺', '周恩来', '朱德', '刘伯承'], a: 0, e: '贺龙和叶挺转移到汕头。', ch: '第二篇·前往红都的路上' },
+            { q: '1928年，贺龙用一把菜刀在湖南建立了一个____区。', o: ['苏维埃', '革命根据', '游击', '苏区'], a: 0, e: '用一把菜刀在湖南建立了一个苏维埃区。', ch: '第二篇·前往红都的路上' },
+            { q: '1935年贺龙的红二方面军与____会师。', o: ['红四方面军', '红一方面军', '红三军团', '红十五军团'], a: 0, e: '与红四方面军会师。', ch: '第二篇·前往红都的路上' },
+            { q: '陕北并不缺少土地，而是缺少能真正用来____的土地。', o: ['耕种', '居住', '放牧', '建设'], a: 0, e: '缺少能真正用来耕种的土地。', ch: '第二篇·前往红都的路上' },
+            { q: '斯诺在这里认识了许多红军战士：绰号"老狗"的少年、外号"老表"的少年、乡村少年、学徒"____"。', o: ['铁匠', '小红军', '红小鬼', '小兵'], a: 0, e: '学徒"铁匠"。',
+                ch: '第二篇·前往红都的路上' },
+            { q: '红军战士的日常：团结、乐观、整天____，遵守纪律。', o: ['训练', '学习', '唱歌', '劳动'], a: 2, e: '整天唱歌，遵守纪律。', ch: '第二篇·前往红都的路上' },
+            { q: '斯诺在____见到了毛泽东。', o: ['保安', '延安', '吴起镇', '瑞金'], a: 0, e: '斯诺在保安见到了毛泽东。', ch: '第三篇·在保安' },
+            { q: '在第二次全国苏维埃大会上，毛泽东被选为____。', o: ['中央执行委员会主席', '军委主席', '总书记', '政府主席'], a: 0, e: '被选为中央执行委员会主席。', ch: '第三篇·在保安' },
+            { q: '毛泽东是一位天才的____和____家。', o: ['政治家·军事', '军事·战略', '组织家·宣传', '战略·组织'], a: 2, e: '天才的组织家和宣传家。', ch: '第三篇·在保安' },
+            { q: '国共合作时的两大原则：一是承认有必要采取____政策；二是要求在国内实行____政策。', o: ['抗日·革命', '反帝·土地', '民族·民主', '救亡·改革'], a: 0, e: '采取抗日政策，实行革命政策。',
+                ch: '第三篇·在保安' },
+            { q: '共产党表示愿意停止内战，建立"____"抵抗侵略者。', o: ['抗日民族统一战线', '反帝联盟', '救亡阵线', '民族同盟'], a: 0, e: '建立"抗日民族统一战线"。', ch: '第三篇·在保安' },
+            { q: '1936年7月16日的晚上，斯诺与毛泽东围绕____战争进行了一次深入的对谈。', o: ['抗日', '解放', '民族', '革命'], a: 0, e: '围绕抗日战争进行对谈。', ch: '第三篇·在保安' },
+            { q: '三个条件保证打败日本，主要条件是____。', o: ['中国抗日统一战线的建立', '世界抗日统一战线的形成', '被压迫人民发动革命', '国际援助'], a: 0, e: '主要条件是中国抗日统一战线的建立。',
+                ch: '第三篇·在保安' },
+            { q: '中心战略是____战，着重依靠游击战术。', o: ['运动战', '阵地战', '持久战', '游击战'], a: 0, e: '中心战略是运动战。', ch: '第三篇·在保安' },
+            { q: '斯诺去参观了红军大学，校长____是一个28岁的指挥员。', o: ['林彪', '彭德怀', '朱德', '刘伯承'], a: 0, e: '红军大学校长是林彪。', ch: '第三篇·在保安' },
+            { q: '把学校里那些大名鼎鼎的学员的首级悬赏加起来，总共超过____元。', o: ['二百万元', '三百万元', '五百万元', '一百万元'], a: 0, e: '总共超过二百万元。', ch: '第三篇·在保安' },
+            { q: '林彪邀请斯诺作题为"____"的讲话。', o: ['抗日战争', '中国革命', '红军精神', '统一战线'], a: 0, e: '作题为"抗日战争"的讲话。', ch: '第三篇·在保安' },
+            { q: '斯诺还去观看了一场红军剧社的演出，中央政治局总书记洛甫、红军大学校长____、财政部部长____、政府主席毛泽东等也在观众中间。', o: ['林彪·林祖涵', '彭德怀·林祖涵', '林彪·徐海东', '朱德·林祖涵'],
+                a: 0, e: '林彪和林祖涵也在观众中间。', ch: '第三篇·在保安' },
+            { q: '节目形式包括短剧、舞蹈、歌唱、哑剧等，表达的是两个中心主题：抗日和____。', o: ['革命', '阶级斗争', '解放', '反封建'], a: 0, e: '两个中心主题是抗日和革命。', ch: '第三篇·在保安' },
+            { q: '斯诺在第二天访问了人民抗日剧社的社长____女士。', o: ['李伯钊', '危拱之', '康克清', '贺子珍'], a: 0, e: '社长是李伯钊女士。', ch: '第三篇·在保安' },
+            { q: '毛泽东出生于湖南省湘潭县韶山冲，6岁时下农活，8到13岁入小学堂读书。10岁时曾逃学，体验到了____行动的效果。', o: ['反抗', '革命', '斗争', '联合'], a: 0,
+                e: '体验到了反抗行动的效果。', ch: '第四篇·一位共产党员的来历' },
+            { q: '毛泽东喜欢读造反的故事，喜欢读《____》。', o: ['水浒传', '三国演义', '西游记', '红楼梦'], a: 0, e: '喜欢读《水浒传》。', ch: '第四篇·一位共产党员的来历' },
+            { q: '期间他意识到"____，匹夫有责"。', o: ['天下兴亡', '国家兴亡', '民族兴亡', '社稷兴亡'], a: 0, e: '意识到"天下兴亡，匹夫有责"。', ch: '第四篇·一位共产党员的来历' },
+            { q: '16岁到湘乡县____读书，学习自然科学和____。', o: ['东山高等小学·新学', '长沙中学·新学', '东山高等小学·旧学', '长沙中学·旧学'], a: 0, e: '到东山高等小学读书，学习自然科学和新学。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '毛泽东崇拜____，喜欢听关于日本的事情。', o: ['康有为', '梁启超', '孙中山', '谭嗣同'], a: 0, e: '崇拜康有为。', ch: '第四篇·一位共产党员的来历' },
+            { q: '毛泽东步行到长沙，进一所专为____人办的中学去读书。', o: ['湘乡', '湖南', '长沙', '湘潭'], a: 0, e: '进一所专为湘乡人办的中学去读书。', ch: '第四篇·一位共产党员的来历' },
+            { q: '毛泽东第一次看到民族革命的报纸《____》。', o: ['民立报', '湘江评论', '新青年', '申报'], a: 0, e: '第一次看到《民立报》。', ch: '第四篇·一位共产党员的来历' },
+            { q: '在____学校读了5年书，印象最深的教员是____。', o: ['湖南省立第一师范·杨昌济', '长沙师范·杨昌济', '湖南省立第一师范·徐特立', '长沙师范·徐特立'], a: 0,
+                e: '在湖南省立第一师范读了5年书，印象最深的教员是杨昌济。', ch: '第四篇·一位共产党员的来历' },
+            { q: '一位姓唐的教员给毛泽东看旧书《____》。', o: ['盛世危言', '大同书', '民约论', '天演论'], a: 0, e: '看旧书《盛世危言》。', ch: '第四篇·一位共产党员的来历' },
+            { q: '毛泽东效仿《____》上两个中国学生旅行全国的行为，和萧瑜在湖南徒步旅行。', o: ['民立报', '湘江评论', '新青年', '申报'], a: 0, e: '效仿《民立报》上两个中国学生旅行全国的行为。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '1917年，毛泽东和几个朋友成立了"____"。', o: ['新民学会', '觉悟社', '互助社', '改造社'], a: 0, e: '成立了"新民学会"。', ch: '第四篇·一位共产党员的来历' },
+            { q: '此时毛泽东的思想是____，民主改良主义，空想社会主义的结合。', o: ['自由主义', '无政府主义', '激进主义', '民族主义'], a: 0, e: '思想是自由主义、民主改良主义、空想社会主义的结合。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '1918年师范毕业后去北京，在老师杨昌济和____的帮助下，获得____图书馆助理员的工作。', o: ['李大钊·北京大学', '陈独秀·北京大学', '李大钊·清华', '陈独秀·清华'], a: 0,
+                e: '在杨昌济和李大钊的帮助下，获得北京大学图书馆助理员的工作。', ch: '第四篇·一位共产党员的来历' },
+            { q: '回到长沙后，毛泽东成为学生报纸《____》的主笔。', o: ['湘江评论', '新青年', '民立报', '向导'], a: 0, e: '成为《湘江评论》的主笔。', ch: '第四篇·一位共产党员的来历' },
+            { q: '在北京时毛泽东接触到了马克思主义理论和俄国革命历史的影响，从而建立起对马克思主义的信仰。他读了许多书，其中不包括以下哪本？', o: ['《共产党宣言》', '《阶级斗争》', '《社会主义史》', '《资本论》'],
+                a: 3, e: '毛泽东当时读的书包括《共产党宣言》《阶级斗争》《社会主义史》等，但《资本论》是在此之后才深入研读的。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1920年，毛泽东第二次来到上海，和____讨论组织"改造湖南联盟"的计划。', o: ['陈独秀', '李大钊', '张国焘', '蔡和森'], a: 0, e: '和陈独秀讨论组织"改造湖南联盟"的计划。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '1923年出席第三次代表大会，会议决定____合作，建立____的统一战线。', o: ['国共·革命', '国共·抗日', '国共·民族', '国共·民主'], a: 0, e: '决定国共合作，建立革命的统一战线。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '1924年春到广州，出席____第一次全国代表大会。', o: ['国民党', '共产党', '国民政府', '革命军'], a: 0, e: '出席国民党第一次全国代表大会。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1925年"五卅"惨案后，毛泽东组织了____多个农会。', o: ['二十', '三十', '四十', '五十'], a: 0, e: '组织了二十多个农会。', ch: '第四篇·一位共产党员的来历' },
+            { q: '毛泽东逃到广州，任《____》主编。', o: ['政治周报', '向导', '湘江评论', '新青年'], a: 0, e: '任《政治周报》主编。', ch: '第四篇·一位共产党员的来历' },
+            { q: '毛泽东不同意陈独秀的____政策。', o: ['右倾投降主义', '左倾冒险主义', '保守主义', '机会主义'], a: 0, e: '不同意陈独秀的右倾投降主义政策。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1926年春前往上海指导共产党农民工作，随后被派到____任农民运动视察员。', o: ['湖南', '湖北', '江西', '广东'], a: 0, e: '被派到湖南任农民运动视察员。', ch: '第四篇·一位共产党员的来历' },
+            { q: '秋天，____和____的统一战线形成，北伐开始。', o: ['国共·革命', '国共·抗日', '国共·民族', '国共·民主'], a: 0, e: '国共革命的统一战线形成。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1927年5月，出席在武汉召开的党的第五次代表大会，他的农民运动政策被____等否定。', o: ['陈独秀', '张国焘', '李立三', '王明'], a: 0, e: '被陈独秀等否定。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '1927年南昌起义后，毛泽东被派到长沙组织"____起义"。', o: ['秋收', '南昌', '广州', '湘赣'], a: 0, e: '组织"秋收起义"。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1927年11月在湖南____成立第一个苏维埃政府。', o: ['茶陵', '浏阳', '平江', '醴陵'], a: 0, e: '在湖南茶陵成立第一个苏维埃政府。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1928年4月，与朱德会师____。', o: ['井冈山', '瑞金', '延安', '保安'], a: 0, e: '与朱德会师井冈山。', ch: '第四篇·一位共产党员的来历' },
+            { q: '当时领导队伍认为革命的主要任务是：分地和建立苏维埃。政策主张自由贸易，优待____。', o: ['俘虏', '农民', '工人', '知识分子'], a: 0, e: '政策主张自由贸易，优待俘虏。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '井冈山会师后改编成立红军第四军，____任军长，____任党代表。', o: ['朱德·毛泽东', '毛泽东·朱德', '彭德怀·毛泽东', '朱德·陈毅'], a: 0, e: '朱德任军长，毛泽东任党代表。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '之后第五军成立，____任军长。', o: ['彭德怀', '林彪', '贺龙', '徐海东'], a: 0, e: '彭德怀任军长。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1929年12月，红四军在____召开第九次代表大会后，几乎整个江西南部都收入红军之手，____根据地建立起来了。', o: ['古田·中央', '瑞金·中央', '古田·井冈山', '瑞金·井冈山'], a: 0,
+                e: '在古田召开第九次代表大会，中央根据地建立起来了。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1930年2月7日，江西召开了党、政、军代表出席的会议，建立了____苏维埃政府。', o: ['江西省', '中央', '赣西南', '湘赣'], a: 0, e: '建立了江西省苏维埃政府。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '井冈山时期红军制定了三大纪律：行动听指挥、不拿群众一针一线、____。', o: ['打土豪要归公', '一切缴获要归公', '买卖公平', '借东西要还'], a: 0, e: '三大纪律包括"打土豪要归公"。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '红军游击战术的四个口号：敌进我退、____、敌疲我打、____。', o: ['敌驻我扰·敌退我追', '敌驻我扰·敌退我进', '敌退我追·敌驻我扰', '敌退我进·敌驻我扰'], a: 0,
+                e: '敌进我退，敌驻我扰，敌疲我打，敌退我追。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1930年8月，三军团和一团再次会师，再次攻打____。', o: ['长沙', '南昌', '武汉', '广州'], a: 0, e: '再次攻打长沙。', ch: '第四篇·一位共产党员的来历' },
+            { q: '三军团合并为第一方面军，由____任总司令，____任总政委。', o: ['朱德·毛泽东', '毛泽东·朱德', '彭德怀·毛泽东', '朱德·周恩来'], a: 0, e: '朱德任总司令，毛泽东任总政委。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '这时中华苏维埃共和国中央执行委员会成立了，____当选为主席。', o: ['毛泽东', '朱德', '周恩来', '刘少奇'], a: 0, e: '毛泽东当选为主席。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1930年年底开始，敌军总数超过十万，兵力五路开始包围____。', o: ['瑞金', '井冈山', '延安', '保安'], a: 0, e: '包围瑞金。', ch: '第四篇·一位共产党员的来历' },
+            { q: '一个月以后，____亲自出马统率三十万军队，要"最后剿灭赤匪"。', o: ['蒋介石', '何应钦', '张学良', '陈诚'], a: 0, e: '蒋介石亲自出马。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1933年2月，____开始第四次围剿，结果惨败。', o: ['蒋介石', '何应钦', '张学良', '陈诚'], a: 0, e: '蒋介石开始第四次围剿，结果惨败。', ch: '第四篇·一位共产党员的来历' },
+            { q: '1934年1月，在瑞金召开中华苏维埃第二次全国代表大会，于1934年10月开始____。', o: ['长征', '西征', '东征', '北伐'], a: 0, e: '于1934年10月开始长征。',
+                ch: '第四篇·一位共产党员的来历' },
+            { q: '1935年1月红军主力到达贵州____。', o: ['遵义', '贵阳', '赤水', '娄山关'], a: 0, e: '到达贵州遵义。', ch: '第四篇·一位共产党员的来历' },
+            { q: '在第五次围剿中，蒋介石发动了约90万的军队，而红军只有____万的正规军。', o: ['10万', '15万', '18万', '20万'], a: 0, e: '红军只有10万正规军。', ch: '第五篇·长征' },
+            { q: '红军在____举行军事会议后决定撤出。', o: ['瑞金', '井冈山', '遵义', '古田'], a: 0, e: '红军在瑞金举行军事会议后决定撤出。', ch: '第五篇·长征' },
+            { q: '蒋介石把大量部队从湖北、安徽、江西撤出，防止红军过长江进入____。', o: ['四川', '贵州', '云南', '西藏'], a: 0, e: '防止红军过长江进入四川。', ch: '第五篇·长征' },
+            { q: '蒋介石在____边境迅速集中兵力，封锁长江的捷径短道。', o: ['贵州', '四川', '云南', '湖南'], a: 0, e: '在贵州边境迅速集中兵力。', ch: '第五篇·长征' },
+            { q: '1935年5月初，红军又回师南向，进入____。', o: ['云南', '贵州', '四川', '广西'], a: 0, e: '进入云南。', ch: '第五篇·长征' },
+            { q: '蒋介石下令把所有渡船撤至北岸焚烧，但红军一个营穿着缴获的国民党军服，来到可以摆渡的地方____。', o: ['皎平渡', '安顺场', '泸定桥', '金沙江'], a: 0, e: '来到皎平渡。',
+                ch: '第五篇·长征' },
+            { q: '蒋介石一怒之下飞到四川，希望在____上截断红军。', o: ['大渡河', '金沙江', '雅砻江', '岷江'], a: 0, e: '希望在大渡河上截断红军。', ch: '第五篇·长征' },
+            { q: '红军从金沙江转移到四川境内，进入了独立的____族区。', o: ['彝', '藏', '羌', '苗'], a: 0, e: '进入了独立的彝族区。', ch: '第五篇·长征' },
+            { q: '面对历来仇视汉人的____族，红军先锋部队指挥员____前往谈判。', o: ['彝·刘伯承', '藏·刘伯承', '彝·朱德', '藏·朱德'], a: 0, e: '彝族，刘伯承前往谈判。', ch: '第五篇·长征' },
+            { q: '彝族总首领与刘伯承联合作，红军顺利过境。一些彝族人还参加了红军。红军一军团先锋师到达了大渡河，来到了河边的安顺场。朱德、毛泽东、____和____做出了一个决议，让红军战士占领____。',
+                o: ['周恩来·彭德怀·泸定桥', '周恩来·林彪·泸定桥', '朱德·彭德怀·安顺场', '周恩来·林彪·安顺场'], a: 0, e: '朱德、毛泽东、周恩来和彭德怀做出决议，让红军占领泸定桥。',
+                ch: '第五篇·长征' },
+            { q: '为了在敌人援军到达之前把桥占领，30个红军战士背上毛瑟枪和手榴弹，爬上桥板，向敌人的碉堡投掷手榴弹。敌军纷纷溃逃，一两个小时之内，全军就渡过了大渡河。这是哪座桥？', o: ['泸定桥', '安顺桥',
+                    '铁索桥', '大渡桥'
+                ], a: 0, e: '这是泸定桥。', ch: '第五篇·长征' },
+            { q: '在大渡河以北爬上一万六千英尺高的____。', o: ['夹金山', '梦笔山', '打鼓山', '泡桐岗'], a: 0, e: '爬上了夹金山。', ch: '第五篇·长征' },
+            { q: '1935年8月进入川藏边界____（不得不为几头牛羊打仗，一个大萝卜够15人吃）。', o: ['毛尔盖', '松潘', '若尔盖', '阿坝'], a: 0, e: '进入毛尔盖地区。', ch: '第五篇·长征' },
+            { q: '长征一共____天，平均每天行军71里。', o: ['368天', '370天', '365天', '380天'], a: 0, e: '长征一共368天。', ch: '第五篇·长征' },
+            { q: '长征爬过____条山脉，渡过24条河流，经过12个省份。', o: ['18条', '20条', '22条', '15条'], a: 0, e: '爬过18条山脉。', ch: '第五篇·长征' },
+            { q: '长征穿过6个不同的____地区。', o: ['少数民族', '省份', '气候', '地形'], a: 0, e: '穿过6个不同的少数民族地区。', ch: '第五篇·长征' },
+            { q: '开创时期____出生于保安中农之家→到榆林上中学→进黄埔军校学习。', o: ['刘志丹', '徐海东', '谢子长', '高岗'], a: 0, e: '刘志丹出生于保安中农之家。', ch: '第六篇·西北的红星' },
+            { q: '刘志丹有"____"的传说，是现代铁盔罗宾汉。', o: ['刀枪不入', '神行太保', '活阎王', '红军之父'], a: 0, e: '有"刀枪不入"的传说。', ch: '第六篇·西北的红星' },
+            { q: '1933年年初，组织成立陕西第一个苏维埃政府，苏区有了自己的____、邮局、钞票等。', o: ['银行', '学校', '医院', '工厂'], a: 0, e: '苏区有了自己的银行、邮局、钞票等。',
+                ch: '第六篇·西北的红星' },
+            { q: '1935年7月25日，成立红十五军团，任军团长，刘志丹任副军团长兼陕甘革命军事委员会主席。十月，林彪、周恩来、彭德怀、毛泽东率领的一军团到达陕北，1936年初，两支红军会合起来联合实施"抗日"东征。1936年3月，刘志丹不幸牺牲。他被葬在____，苏区把红色中国的一个县改名为____来纪念他。',
+                o: ['保安·志丹县', '延安·志丹县', '保安·刘志丹县', '延安·刘志丹县'], a: 0, e: '葬在保安，改名为志丹县。', ch: '第六篇·西北的红星' },
+            { q: '斯诺在西北大灾荒年间的绥远之行中见到了成千上万的男女老幼活活饿死的情形。在城市里，赈灾委员会收集的粮食却因为怕被____扣留而无法抵达灾区。', o: ['军阀', '官僚', '地主', '土匪'],
+                a: 0, e: '怕被军阀扣留。', ch: '第六篇·西北的红星' },
+            { q: '许多土地集中在____手中，农民面临着名目繁多的捐税。', o: ['地主', '军阀', '官僚', '富农'], a: 0, e: '土地集中在地主手中。', ch: '第六篇·西北的红星' },
+            { q: '对农民有重要意义的四项改革举措：____、取消高利贷、____、消灭特权阶级。', o: ['重新分配土地·废除苛捐杂税', '土地改革·减租减息', '重新分配土地·减租减息', '土地改革·废除苛捐杂税'],
+                a: 0, e: '重新分配土地、取消高利贷、废除苛捐杂税、消灭特权阶级。', ch: '第六篇·西北的红星' },
+            { q: '代议制政府结构最小的单位是____。', o: ['村苏维埃', '乡苏维埃', '县苏维埃', '区苏维埃'], a: 0, e: '最小的单位是村苏维埃。', ch: '第六篇·西北的红星' },
+            { q: '凡年满16岁的，普遍都有____权。', o: ['选举', '被选举', '投票', '参政'], a: 0, e: '年满16岁都有选举权。', ch: '第六篇·西北的红星' },
+            { q: '乡苏维埃下设各个委员会开展各项工作，还有____、贫农会、抗日协会、哥老会、农卫队、游击队等各个组织机构。', o: ['青年团', '妇女会', '儿童团', '工会'], a: 0, e: '还有青年团等组织。',
+                ch: '第六篇·西北的红星' },
+            { q: '广泛宣传动员农民大众自动参加____。', o: ['红军', '农会', '游击队', '赤卫队'], a: 0, e: '动员农民大众自动参加红军。', ch: '第六篇·西北的红星' },
+            { q: '老苏区的治安和警卫工作都由____担任。', o: ['赤卫队', '红军', '民兵', '少年先锋队'], a: 0, e: '由赤卫队担任。', ch: '第六篇·西北的红星' },
+            { q: '西北苏区的经济是私人资本主义、国家资本主义、____的奇怪混合。', o: ['合作社经济', '集体经济', '公有制经济', '计划经济的'], a: 0, e: '是合作社经济。', ch: '第六篇·西北的红星' },
+            { q: '第三种经济是通过建立____形成的，政府和群众合伙参加经营。', o: ['合作社', '集体农场', '国营企业', '互助组'], a: 0, e: '通过建立合作社形成。', ch: '第六篇·西北的红星' },
+            { q: '除了边境各县还可以使用白区纸币以外，其他地区一律只流通____纸币。', o: ['苏区', '红军', '边区', '红色'], a: 0, e: '只流通苏区纸币。', ch: '第六篇·西北的红星' },
+            { q: '南方印的纸币十分讲究，用的是____。', o: ['钞票纸', '棉纸', '宣纸', '牛皮纸'], a: 0, e: '用的是钞票纸。', ch: '第六篇·西北的红星' },
+            { q: '在西北，由于技术上的困难，纸币就粗糙得多，纸质低劣，有时用____。', o: ['手工纸', '草纸', '牛皮纸', '土纸'], a: 0, e: '有时用手工纸。', ch: '第六篇·西北的红星' },
+            { q: '财政开支每月____万元，政府的收入主要来源于对剥削阶级的税收以及人民的自愿捐献。', o: ['32万', '30万', '35万', '40万'], a: 0, e: '财政开支每月32万元。',
+                ch: '第六篇·西北的红星' },
+            { q: '____还组织制定了《预算编制纲要》。', o: ['林祖涵', '毛泽东', '周恩来', '徐特立'], a: 0, e: '林祖涵组织制定了《预算编制纲要》。', ch: '第六篇·西北的红星' },
+            { q: '____1877年生于长沙→上学6年→在清朝时做过塾师→长沙师范学校毕业后执教（是____的老师）。', o: ['徐特立·毛泽东', '林祖涵·毛泽东', '徐特立·周恩来', '林祖涵·周恩来'], a: 0,
+                e: '徐特立1877年生于长沙，是毛泽东的老师。', ch: '第六篇·西北的红星' },
+            { q: '教育体制分三部分：____（苏维埃办）、军队（红军办）、社会（共产党各组织办）。', o: ['学校', '学堂', '书院', '私塾'], a: 0, e: '学校（苏维埃办）。', ch: '第六篇·西北的红星' },
+            { q: '教育重点主要放在____方面。', o: ['政治', '文化', '军事', '技术'], a: 0, e: '教育重点主要放在政治方面。', ch: '第六篇·西北的红星' },
+            { q: '如最小的儿童识字时，是通过简单的____来学的。', o: ['图画', '故事', '歌谣', '课本'], a: 0, e: '通过简单的图画来学的。', ch: '第六篇·西北的红星' },
+            { q: '为了更快地扫除文盲，共产党开始在有限范围内使用____汉语拼音。', o: ['拉丁化', '注音符号', '国语罗马字', '新文字'], a: 0, e: '使用拉丁化汉语拼音。', ch: '第六篇·西北的红星' },
+            { q: '军队"一边战斗一边____"。', o: ['学习', '生产', '宣传', '训练'], a: 0, e: '一边战斗一边学习。', ch: '第六篇·西北的红星' },
+            { q: '年轻的共产党员____陪同斯诺前往甘肃边境和前线。', o: ['胡金魁', '李长林', '刘晓', '王牧师'], a: 0, e: '胡金魁陪同斯诺前往。', ch: '第七篇·去前线的路上' },
+            { q: '斯诺在____借宿时了解到：一开始大家对红军有些抱怨，但跟白军相比，农民们又纷纷记起了红军的好来。', o: ['吴起镇', '保安', '延安', '预旺县'], a: 0, e: '在吴起镇借宿。',
+                ch: '第七篇·去前线的路上' },
+            { q: '农民们说红军是____的，有____学校，为农民工人的权利而打仗等。', o: ['为穷人打仗·识字', '为穷人打仗·军事', '抗日的·政治', '革命的·军事'], a: 0, e: '红军是为穷人打仗的，有识字学校。',
+                ch: '第七篇·去前线的路上' },
+            { q: '江西苏区工业比较繁荣，共产党经营钨矿、____、织布厂、机器车间。', o: ['煤矿', '铁矿', '铜矿', '金矿'], a: 0, e: '经营钨矿、煤矿等。', ch: '第七篇·去前线的路上' },
+            { q: '斯诺访问苏区时，各类手工业工厂都计划着生产足够的产品，目标是让红色中国"____"。', o: ['自给自足', '工业化', '现代化', '繁荣富强'], a: 0, e: '目标是让红色中国"自给自足"。',
+                ch: '第七篇·去前线的路上' },
+            { q: '____则是红区工厂工人最"集中"的地方。', o: ['吴起镇', '保安', '延安', '瑞金'], a: 0, e: '吴起镇是红区工厂工人最"集中"的地方。', ch: '第七篇·去前线的路上' },
+            { q: '斯诺在吴起镇待了____天，到工厂里访问工人。', o: ['三天', '四天', '五天', '六天'], a: 0, e: '在吴起镇待了三天。', ch: '第七篇·去前线的路上' },
+            { q: '厂长____带斯诺参观了好几个窑洞。', o: ['刘景范', '李强', '吴亮平', '林祖涵'], a: 0, e: '厂长刘景范带斯诺参观。', ch: '第七篇·去前线的路上' },
+            { q: '工人大多数是十八岁到二十五岁或三十岁的____。', o: ['青年', '壮年', '中年', '少年'], a: 0, e: '大多数是青年。', ch: '第七篇·去前线的路上' },
+            { q: '红色工会妇女部长____向斯诺介绍了工作条件。', o: ['刘群仙', '康克清', '李伯钊', '贺子珍'], a: 0, e: '妇女部长刘群仙介绍了工作条件。', ch: '第七篇·去前线的路上' },
+            { q: '斯诺在此遇到一个名叫____的电气工程师，是个电力专家。', o: ['张作民', '吴亮平', '李强', '刘鼎'], a: 0, e: '名叫张作民的电气工程师。', ch: '第七篇·去前线的路上' },
+            { q: '斯诺来到了____红一方面军和司令员彭德怀的司令部所在地。', o: ['预旺县', '保安', '吴起镇', '延安'], a: 0, e: '来到了预旺县。', ch: '第八篇·与红军在一起' },
+            { q: '普通士兵平均年龄____岁，指挥员平均年龄____岁。', o: ['19岁·24岁', '20岁·25岁', '18岁·23岁', '21岁·26岁'], a: 0, e: '士兵平均19岁，指挥员平均24岁。',
+                ch: '第八篇·与红军在一起' },
+            { q: '红军从不掠夺百姓，每占领一个地方就着手建设他们自己的经济，他们80%以上的____和70%以上的____是从敌军那里夺过来的。', o: ['粮食·武器', '武器·弹药', '弹药·粮食', '粮食·弹药'],
+                a: 0, e: '80%以上的粮食和70%以上的武器是从敌军那里夺过来的。', ch: '第八篇·与红军在一起' },
+            { q: '红一方面军司令部的驻地____宁夏东南部的一个古老的回民城池。', o: ['预旺县', '保安', '吴起镇', '延安'], a: 0, e: '驻地是预旺县。', ch: '第八篇·与红军在一起' },
+            { q: '彭德怀在任时，先在湖南，后在南昌军校学习→1927年28岁任旅长→1928年7月发动____起义。', o: ['平江', '南昌', '秋收', '广州'], a: 0, e: '发动平江起义。',
+                ch: '第八篇·与红军在一起' },
+            { q: '彭德怀1930年集寨8000多人的"铁军"(即红军三军团)，攻占____后守城10日被迫撤出。', o: ['长沙', '南昌', '武汉', '广州'], a: 0, e: '攻占长沙后守城10日被迫撤出。',
+                ch: '第八篇·与红军在一起' },
+            { q: '长征时彭德怀是打先锋的红三军团军团长，最后胜利进入____。', o: ['陕北', '延安', '保安', '甘肃'], a: 0, e: '最后胜利进入陕北。', ch: '第八篇·与红军在一起' },
+            { q: '彭德怀留给____的印象：愉快爱笑，身体健康，爱____。', o: ['斯诺·体育', '斯诺·读书', '毛泽东·体育', '毛泽东·读书'], a: 0, e: '留给斯诺的印象：愉快爱笑，爱体育。',
+                ch: '第八篇·与红军在一起' },
+            { q: '彭德怀很欣赏____的演出，演出途中把衣服挂在身旁的小号手上。', o: ['红军剧社', '歌舞团', '宣传队', '文工团'], a: 0, e: '很欣赏红军剧社的演出。', ch: '第八篇·与红军在一起' },
+            { q: '彭德怀出生在____县的一个富农家庭。', o: ['湘潭', '长沙', '湘乡', '浏阳'], a: 0, e: '出生在湘潭县。', ch: '第八篇·与红军在一起' },
+            { q: '彭德怀6岁丧母，被____送到老式私塾读书。', o: ['祖母', '父亲', '继母', '舅舅'], a: 0, e: '被祖母送到老式私塾读书。', ch: '第八篇·与红军在一起' },
+            { q: '彭德怀反抗老师，遭继母痛斥后被送到婶母家住，婶母送他到____念书。', o: ['新学堂', '私塾', '师范学校', '军校'], a: 0, e: '送到新学堂念书。', ch: '第八篇·与红军在一起' },
+            { q: '婶母把婶母的鸦片烟盘，祖母提出要把彭德怀____。', o: ['淹死', '打死', '赶出家门', '送人'], a: 0, e: '祖母提出要把彭德怀淹死。', ch: '第八篇·与红军在一起' },
+            { q: '彭德怀9岁离家，开始闯荡世界。18岁当上____。', o: ['排长', '连长', '营长', '团长'], a: 0, e: '18岁当上排长。', ch: '第八篇·与红军在一起' },
+            { q: '中国采用游击战的主要原因是____破产，特别是农村经济破产。', o: ['农村经济', '城市经济', '工业', '商业'], a: 0, e: '主要原因是农村经济破产。', ch: '第八篇·与红军在一起' },
+            { q: '第三，____的势力范围之间有很多空隙，可以迅速发展游击战。', o: ['军阀', '地主', '国民党', '帝国主义'], a: 0, e: '军阀的势力范围之间有很多空隙。', ch: '第八篇·与红军在一起' },
+            { q: '红军战士居住、饮食简单。不作战时过得充实又忙碌，朝五晚九。有各种各样的由班到团的集体竞赛，"____"是一切社会和文化生活的中心。', o: ['列宁室', '俱乐部', '文化室', '活动室'],
+                a: 0, e: '"列宁室"是一切社会和文化生活的中心。', ch: '第八篇·与红军在一起' },
+            { q: '每个连和团均有列宁室，室内悬挂____像。', o: ['马克思和列宁', '毛泽东和朱德', '斯大林和列宁', '马克思和恩格斯'], a: 0, e: '悬挂马克思和列宁像。', ch: '第八篇·与红军在一起' },
+            { q: '斯诺去找红军政治部的____，希望参加普通战士的政治课。', o: ['刘晓', '刘群仙', '李长林', '胡金魁'], a: 0, e: '去找刘晓。', ch: '第八篇·与红军在一起' },
+            { q: '刘晓，一个极其认真的青年，在1926年和大革命以前是个虔诚的____教徒。', o: ['基督', '佛教', '伊斯兰教', '道教'], a: 0, e: '是个虔诚的基督教徒。', ch: '第八篇·与红军在一起' },
+            { q: '刘晓去了上海积极参加学生运动，加入____，被法租界警察逮捕。', o: ['共青团', '共产党', '国民党', '工会'], a: 0, e: '加入共青团。', ch: '第八篇·与红军在一起' },
+            { q: '徐海东，驻扎预旺县的红军十五军团的____，给斯诺的印象是共产党领袖中"阶级意识"最强的人。', o: ['军团长', '政委', '参谋长', '司令员'], a: 0, e: '十五军团的军团长。',
+                ch: '第九篇·与红军在一起（续）' },
+            { q: '徐海东1900年出生于汉口附近的黄陂县，家里世代做____。', o: ['窑工', '农民', '铁匠', '木匠'], a: 0, e: '家里世代做窑工。', ch: '第九篇·与红军在一起（续）' },
+            { q: '徐海东11岁经历"富人打穷人"事件后逃学，在窑厂做学徒，罢工反对克扣工资，体会到组织起来的力量是穷人自己的武器→21岁因家庭纠纷离家，后参加军阀，感到厌恶，再参加广州国民党第四军，1927年任____。',
+                o: ['排长', '连长', '营长', '团长'], a: 0, e: '1927年任排长。', ch: '第九篇·与红军在一起（续）' },
+            { q: '1927年春，国民党左右派斗争时，徐海东逃回黄陂，建立党支部，右派政变发生后，组织起窑厂工人和当地农民建立湖北省第一支"工农军队"→由17人发展为有6万人的____方面军。', o: ['红四', '红二',
+                    '红三', '红一'
+                ], a: 0, e: '发展为红四方面军。', ch: '第九篇·与红军在一起（续）' },
+            { q: '徐海东家族____口人被杀。', o: ['66口', '70口', '60口', '80口'], a: 0, e: '家族66口人被杀。', ch: '第九篇·与红军在一起（续）' },
+            { q: '天台山、老君山苏区6万人剩下____人。', o: ['300人', '500人', '1000人', '200人'], a: 0, e: '6万人剩下300人。', ch: '第九篇·与红军在一起（续）' },
+            { q: '____，宁夏省主席；____，原先是宁夏省主席，此时正雄霸于甘肃北部。', o: ['马鸿逵·马福祥', '马福祥·马鸿逵', '马步芳·马鸿逵', '马鸿逵·马步芳'], a: 0, e: '马鸿逵是宁夏省主席，马福祥原先也是。',
+                ch: '第九篇·与红军在一起（续）' },
+            { q: '以马鸿逵为首的四大马的剥削压迫遭到回民百姓的仇恨。共产党提出适合回民的七条诺言：①废除一切苛捐杂税；②帮助建立回民自治政府；③废止征兵；④取消之前的债务和借贷；⑤保护回民文化；⑥保证各派宗教自由；⑦帮助创立和武装回民抗日部队。这些政策得到了回民的认同，由此共产党成功创立了中国回民红军的核心。以下哪条不在七条诺言中？',
+                o: ['土地改革', '废除苛捐杂税', '保护回民文化', '保证宗教自由'], a: 0, e: '七条诺言中不包括土地改革。', ch: '第九篇·与红军在一起（续）' },
+            { q: '斯诺与徐海东手下的参谋人员一道拜访了隶属于红十五军团的____教导团。', o: ['回民', '藏民', '彝民', '苗民'], a: 0, e: '拜访了回民教导团。', ch: '第九篇·与红军在一起（续）' },
+            { q: '这些战士很讲卫生，比起汉人，他们更高，更结实，胡须更浓密，肤色更黑，衣服又黑又大，具有突出的____人的特征。', o: ['回族', '藏族', '彝族', '蒙古族'], a: 0, e: '具有突出的回族人的特征。',
+                ch: '第九篇·与红军在一起（续）' },
+            { q: '在回民代表参加的大会上，选举出了主席和临时回民苏维埃政府委员会。还通过决议，接受红军在建立回民抗日军队方面的援助，开始组织____团结同盟，____会和群众抗日会。', o: ['回民·抗日', '回民·民族',
+                    '回族·救国', '回族·抗日'
+                ], a: 0, e: '开始组织回民团结同盟，抗日会和群众抗日会。', ch: '第九篇·与红军在一起（续）' },
+            { q: '红军在韦州县的红城水进行休整和"巩固"新区，甘肃南部的____国军部下一个整师向红军投诚。', o: ['马鸿逵', '马福祥', '马步芳', '马麒'], a: 0, e: '马鸿逵的国军部下一个整师向红军投诚。',
+                ch: '第十篇·战争与和平' },
+            { q: '红十五军团有两个师准备转移，大军离城秩序井然，出城没有几里路，突然下了一个____的命令。', o: ['隐蔽', '撤退', '进攻', '驻扎'], a: 0, e: '突然下了一个隐蔽的命令。',
+                ch: '第十篇·战争与和平' },
+            { q: '少年先锋队（"红小鬼"）是由____组织的。', o: ['共产党', '共青团', '红军', '苏维埃'], a: 0, e: '由共产党组织的。', ch: '第十篇·战争与和平' },
+            { q: '西北苏区有约四万名少年先锋队员。每个红军驻地都有一个少年先锋队"模范连"，他们都是十二岁至____岁的少年。', o: ['17岁', '18岁', '16岁', '20岁'], a: 0, e: '十二岁至十七岁的少年。',
+                ch: '第十篇·战争与和平' },
+            { q: '少年先锋队员在红军里当传令员、勤务员、号手、____员、无线电报务员、挑水员、宣传员、演员、马夫、护士、秘书甚至教师。', o: ['侦察', '警卫', '通信', '炊事'], a: 0, e: '当侦察员等。',
+                ch: '第十篇·战争与和平' },
+            { q: '在苏区，少年先锋队员在后方检查过路旅客，看他们有没有路条。他们十分坚定地执行这项任务，把没有路条的旅客带到当地苏维埃去盘问。____也得拿出路条才能通行。', o: ['彭德怀', '毛泽东', '周恩来', '朱德'],
+                a: 0, e: '彭德怀也得拿出路条才能通行。', ch: '第十篇·战争与和平' },
+            { q: '为了联合国民党一起____，党要求部队在今后行动中遵守"统一战线策略"。', o: ['抗日', '革命', '反帝', '救国'], a: 0, e: '为了联合国民党一起抗日。', ch: '第十篇·战争与和平' },
+            { q: '____还特地指出新政策，用有趣的方式表现和修正了指战员们在执行新政策过程中所犯的错误。', o: ['彭德怀', '毛泽东', '周恩来', '朱德'], a: 0, e: '彭德怀还特地指出新政策。',
+                ch: '第十篇·战争与和平' },
+            { q: '朱德出生在四川仪陇→年轻时被云南讲武堂录取，毕业后被授予中尉军衔，随后进入"____"。', o: ['同盟会', '国民党', '共产党', '革命军'], a: 0, e: '随后进入"同盟会"。',
+                ch: '第十篇·战争与和平' },
+            { q: '朱德年近40前往____，对马克思主义和俄国革命产生兴趣。', o: ['上海', '北京', '广州', '武汉'], a: 0, e: '年近40前往上海。', ch: '第十篇·战争与和平' },
+            { q: '1927年8月，朱德决定彻底断绝与国民党的关系，之后在反动派的追杀中死里逃生，获得"____"的罪名。', o: ['朱毛', '叛徒', '土匪', '赤匪'], a: 0, e: '获得"朱毛"的罪名（与毛泽东并称）。',
+                ch: '第十篇·战争与和平' },
+            { q: '1931年，在中华苏维埃第一次全国代表大会上，朱德被推选为____。', o: ['军委主席', '中央执行委员会主席', '红军总司令', '总政委'], a: 0, e: '被推选为军委主席。',
+                ch: '第十篇·战争与和平' },
+            { q: '斯诺在河滩后勒都待了3天，他与一位看马的老红军以及红军药剂师____交谈。', o: ['李德', '傅连暲', '马海德', '白求恩'], a: 0, e: '与红军药剂师李德交谈。', ch: '第十一篇·回到保安' },
+            { q: '斯诺还注意到，在西北，共产党实行了____的政策。', o: ['回民自治', '民族平等', '宗教信仰自由', '土地改革'], a: 0, e: '实行了回民自治的政策。', ch: '第十一篇·回到保安' },
+            { q: '斯诺以为俘虏的两个匪首就要被枪毙了，但____告诉他红军不杀被俘的团丁。', o: ['彭德怀', '毛泽东', '周恩来', '朱德'], a: 0, e: '彭德怀告诉他红军不杀被俘的团丁。',
+                ch: '第十一篇·回到保安' },
+            { q: '回保安后，斯诺又在外交部安顿下来，从9月底一直住到10月。斯诺收集了足够的传记材料，可以编写一本《红色中国名人录》，每天早上都有一个新的指挥员或苏维埃官员来供他访问。斯诺在保安过着平静而愉快的生活，他骑马、游泳、打网球，教会了独臂将军____打"拉米"。',
+                o: ['蔡树藩', '贺炳炎', '余秋里', '彭绍辉'], a: 0, e: '教会了独臂将军蔡树藩打"拉米"。', ch: '第十一篇·回到保安' },
+            { q: '斯诺在保安和____吃"西餐"等。', o: ['毛泽东', '周恩来', '彭德怀', '林祖涵'], a: 0, e: '和毛泽东吃"西餐"。', ch: '第十一篇·回到保安' },
+            { q: '苏联的最大影响是作为一种活榜样，一种产生希望和信念的理想。中国共产党的很多领导人在____接受教育。', o: ['苏联', '法国', '德国', '日本'], a: 0, e: '很多领导人在苏联接受教育。',
+                ch: '第十一篇·回到保安' },
+            { q: '共产党基本上抛弃了中国的封建糟粕，借鉴俄国的思想或制度，分享俄国民革命的集体经验。但也因为____而遭到严重挫折。', o: ['过于依赖苏联经验', '内部斗争', '外部封锁', '经济困难'], a: 0,
+                e: '因为过于依赖苏联经验而遭到严重挫折。', ch: '第十一篇·回到保安' },
+        ];
+
+        // ============================================================
+        //  2. 全局状态
+        // ============================================================
+        const TOTAL = QUESTIONS.length;
+        const PER_LEVEL = 50;
+        const LEVELS = 4;
+
+        let currentUser = null;
+        let state = {
+            currentLevel: 0,
+            currentIndex: 0,
+            answers: new Array(TOTAL).fill(null),
+            correctCount: 0,
+            totalAnswered: 0,
+        };
+
+        // DOM
+        const loginPage = document.getElementById('loginPage');
+        const appContainer = document.getElementById('appContainer');
+        const studentIdInput = document.getElementById('studentIdInput');
+        const studentNameInput = document.getElementById('studentNameInput');
+        const loginError = document.getElementById('loginError');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const rankBtn = document.getElementById('rankBtn');
+        const rankModal = document.getElementById('rankModal');
+        const closeRankBtn = document.getElementById('closeRankBtn');
+        const rankList = document.getElementById('rankList');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const titleBadge = document.getElementById('titleBadge');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const answeredDisplay = document.getElementById('answeredDisplay');
+        const levelTabs = document.getElementById('levelTabs');
+        const questionArea = document.getElementById('questionArea');
+        const toast = document.getElementById('toast');
+
+        // ============================================================
+        //  3. 数据持久化
+        // ============================================================
+        function getUsersData() {
+            try { return JSON.parse(localStorage.getItem('redStarUsers')) || {}; } catch { return {}; }
+        }
+
+        function saveUsersData(users) {
+            localStorage.setItem('redStarUsers', JSON.stringify(users));
+        }
+
+        function loadUserState(studentId) {
+            const users = getUsersData();
+            if (users[studentId] && users[studentId].state) return users[studentId].state;
+            return null;
+        }
+
+        function saveCurrentUserState() {
+            if (!currentUser) return;
+            const users = getUsersData();
+            if (!users[currentUser.studentId]) {
+                users[currentUser.studentId] = { name: currentUser.name, state: {} };
+            }
+            users[currentUser.studentId].state = {
+                currentLevel: state.currentLevel,
+                currentIndex: state.currentIndex,
+                answers: state.answers,
+                correctCount: state.correctCount,
+                totalAnswered: state.totalAnswered,
+            };
+            users[currentUser.studentId].name = currentUser.name;
+            saveUsersData(users);
+        }
+
+        function getRanking() {
+            const users = getUsersData();
+            const list = [];
+            for (const [id, data] of Object.entries(users)) {
+                const score = data.state ? data.state.correctCount || 0 : 0;
+                list.push({ studentId: id, name: data.name || id, score });
+            }
+            list.sort((a, b) => b.score - a.score);
+            return list;
+        }
+
+        // ============================================================
+        //  4. 登录/登出
+        // ============================================================
+        function doLogin() {
+            const id = studentIdInput.value.trim();
+            const name = studentNameInput.value.trim();
+            if (!id) { loginError.textContent = '请输入学号'; return; }
+            if (!name) { loginError.textContent = '请输入姓名'; return; }
+            loginError.textContent = '';
+
+            const saved = loadUserState(id);
+            if (saved) {
+                state = saved;
+                while (state.answers.length < TOTAL) state.answers.push(null);
+                state.answers = state.answers.slice(0, TOTAL);
+            } else {
+                state = {
+                    currentLevel: 0,
+                    currentIndex: 0,
+                    answers: new Array(TOTAL).fill(null),
+                    correctCount: 0,
+                    totalAnswered: 0,
+                };
+            }
+
+            currentUser = { studentId: id, name };
+            saveCurrentUserState();
+
+            loginPage.classList.add('hidden');
+            appContainer.classList.add('show');
+            userNameDisplay.textContent = `👤 ${name}`;
+            renderAll();
+            showToast(`欢迎，${name}！`);
+        }
+
+        function doLogout() {
+            if (currentUser) saveCurrentUserState();
+            currentUser = null;
+            appContainer.classList.remove('show');
+            loginPage.classList.remove('hidden');
+            studentIdInput.value = '';
+            studentNameInput.value = '';
+            loginError.textContent = '';
+            state = { currentLevel: 0, currentIndex: 0, answers: new Array(TOTAL).fill(null), correctCount: 0,
+                totalAnswered: 0 };
+            showToast('已退出');
+        }
+
+        // ============================================================
+        //  5. 核心逻辑
+        // ============================================================
+        function getGlobalIndex(level, idx) { return level * PER_LEVEL + idx; }
+
+        function getLevelQuestions(level) {
+            const start = level * PER_LEVEL;
+            const end = Math.min(start + PER_LEVEL, TOTAL);
+            return QUESTIONS.slice(start, end);
+        }
+
+        function getCurrentQuestion() {
+            const idx = getGlobalIndex(state.currentLevel, state.currentIndex);
+            return QUESTIONS[idx] || null;
+        }
+
+        function isLevelCompleted(level) {
+            const start = level * PER_LEVEL;
+            const end = Math.min(start + PER_LEVEL, TOTAL);
+            for (let i = start; i < end; i++) {
+                if (state.answers[i] === null) return false;
+            }
+            return true;
+        }
+
+        function isLevelUnlocked(level) {
+            if (level === 0) return true;
+            return isLevelCompleted(level - 1);
+        }
+
+        function getTitle(score) {
+            if (score >= 180) return '🏅 传奇领袖';
+            if (score >= 140) return '⚔️ 战地英雄';
+            if (score >= 100) return '📯 老红军';
+            if (score >= 60) return '🔫 扛枪的';
+            if (score >= 20) return '👣 小跟班';
+            return '🪖 新兵蛋子';
+        }
+
+        function renderTabs() {
+            const levelNames = ['第一关·探寻之路', '第二关·领袖风采', '第三关·长征史诗', '第四关·红星闪耀'];
+            let html = '';
+            for (let i = 0; i < LEVELS; i++) {
+                const unlocked = isLevelUnlocked(i);
+                const active = i === state.currentLevel ? 'active' : '';
+                const locked = !unlocked ? 'locked' : '';
+                const check = isLevelCompleted(i) ? ' ✅' : '';
+                html += `<div class="level-tab ${active} ${locked}" data-level="${i}">${levelNames[i]} ${check}</div>`;
+            }
+            levelTabs.innerHTML = html;
+            levelTabs.querySelectorAll('.level-tab').forEach(el => {
+                el.addEventListener('click', function() {
+                    const level = parseInt(this.dataset.level);
+                    if (isLevelUnlocked(level)) {
+                        state.currentLevel = level;
+                        state.currentIndex = 0;
+                        renderAll();
+                    } else {
+                        showToast('请先完成前一关！');
+                    }
+                });
+                // 手机触摸反馈
+                el.addEventListener('touchstart', function() {
+                    if (!this.classList.contains('locked')) {
+                        this.style.transform = 'scale(0.94)';
+                    }
+                }, { passive: true });
+                el.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                }, { passive: true });
+            });
+        }
+
+        function renderQuestion() {
+            const q = getCurrentQuestion();
+            const idx = getGlobalIndex(state.currentLevel, state.currentIndex);
+            const totalInLevel = getLevelQuestions(state.currentLevel).length;
+            const answered = state.answers[idx] !== null;
+
+            if (!q) {
+                const isAllDone = isLevelCompleted(state.currentLevel);
+                questionArea.innerHTML = `
+                            <div class="finish-box">
+                                <div class="big-icon">🎉</div>
+                                <h2>第${state.currentLevel+1}关 完成！</h2>
+                                <p>${isAllDone ? '你已闯过这一关！' : '还有题目未作答，请返回完成。'}</p>
+                                ${state.currentLevel < LEVELS-1 ? `<button class="btn btn-primary" onclick="goNextLevel()">进入下一关 ➜</button>` : 
+                                `<div style="margin-top:12px;"><button class="btn btn-success" onclick="resetAll()">🔄 重新挑战</button></div>`}
+                                ${state.currentLevel === LEVELS-1 && isAllDone ? `<div class="final-score">🏆 ${state.correctCount} 分</div>` : ''}
+                                <div style="margin-top:12px;">
+                                    <button class="btn btn-outline" onclick="showRanking()">🏆 排行榜</button>
+                                </div>
+                            </div>
+                        `;
+                return;
+            }
+
+            const optLabels = ['A', 'B', 'C', 'D'];
+            const selected = state.answers[idx];
+            const showExp = selected !== null;
+
+            let optHtml = q.o.map((opt, i) => {
+                let cls = 'opt';
+                if (selected !== null) cls += ' disabled';
+                if (selected === i) cls += ' selected';
+                if (showExp && i === q.a) cls += ' show-correct';
+                if (showExp && selected === i && i !== q.a) cls += ' wrong';
+                if (showExp && selected === i && i === q.a) cls += ' correct';
+                return `<div class="${cls}" data-optindex="${i}">
+                            <span class="marker">${optLabels[i]}</span>
+                            <span>${opt}</span>
+                        </div>`;
+            }).join('');
+
+            const expHtml = showExp ? `
+                        <div class="explanation show">
+                            <strong>📖 解析：</strong> ${q.e}
+                            ${selected === q.a ? ' ✅ 回答正确！' : ' ❌ 正确答案是 ' + optLabels[q.a]}
+                        </div>
+                    ` : '';
+
+            const progress = `${state.currentIndex+1} / ${totalInLevel}`;
+
+            questionArea.innerHTML = `
+                        <div class="q-header">
+                            <span class="q-number">第 ${idx+1} 题</span>
+                            <span class="q-chapter">${q.ch || ''}</span>
+                            <span class="progress-text">${progress}</span>
+                        </div>
+                        <div class="q-text">${q.q}</div>
+                        <div class="options">${optHtml}</div>
+                        ${expHtml}
+                        <div class="action-row">
+                            <div>
+                                ${state.currentIndex > 0 ? `<button class="btn btn-outline" onclick="prevQuestion()">⬅ 上一题</button>` : ''}
+                            </div>
+                            <div>
+                                ${showExp ? `<button class="btn btn-primary" onclick="nextQuestion()">${state.currentIndex < totalInLevel-1 ? '下一题 ➜' : '完成关卡 🎯'}</button>` :
+                                `<button class="btn btn-primary" disabled>请先作答</button>`}
+                            </div>
+                        </div>
+                    `;
+
+            if (!showExp) {
+                questionArea.querySelectorAll('.opt').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const optIdx = parseInt(this.dataset.optindex);
+                        handleSelect(optIdx);
+                    });
+                    // 触摸反馈
+                    el.addEventListener('touchstart', function() {
+                        if (!this.classList.contains('disabled')) {
+                            this.style.transform = 'scale(0.97)';
+                        }
+                    }, { passive: true });
+                    el.addEventListener('touchend', function() {
+                        this.style.transform = '';
+                    }, { passive: true });
+                });
+            }
+
+            // 为按钮添加触摸反馈
+            questionArea.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                }, { passive: true });
+                btn.addEventListener('touchend', function() {
+                    this.style.transform = '';
+                }, { passive: true });
+            });
+        }
+
+        function renderStatus() {
+            scoreDisplay.textContent = `🏆 ${state.correctCount} 分`;
+            titleBadge.textContent = getTitle(state.correctCount);
+            answeredDisplay.textContent = `已答 ${state.totalAnswered}/${TOTAL}`;
+        }
+
+        function renderAll() {
+            renderTabs();
+            renderQuestion();
+            renderStatus();
+            saveCurrentUserState();
+        }
+
+        function handleSelect(optIdx) {
+            const idx = getGlobalIndex(state.currentLevel, state.currentIndex);
+            if (state.answers[idx] !== null) return;
+            const q = getCurrentQuestion();
+            state.answers[idx] = optIdx;
+            state.totalAnswered++;
+            if (optIdx === q.a) state.correctCount++;
+            saveCurrentUserState();
+            renderAll();
+            // 自动滚动到解析
+            setTimeout(() => {
+                const exp = document.querySelector('.explanation');
+                if (exp) exp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+        }
+
+        function nextQuestion() {
+            const levelQs = getLevelQuestions(state.currentLevel);
+            if (state.currentIndex < levelQs.length - 1) {
+                state.currentIndex++;
+                renderAll();
+                document.getElementById('questionArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                if (isLevelCompleted(state.currentLevel)) {
+                    if (state.currentLevel < LEVELS - 1) {
+                        goNextLevel();
+                    } else {
+                        renderAll();
+                        showToast('🎉 恭喜你完成全部关卡！');
+                        setTimeout(() => showRanking(), 500);
+                    }
+                } else {
+                    showToast('请完成本关所有题目！');
+                }
+            }
+        }
+
+        function prevQuestion() {
+            if (state.currentIndex > 0) {
+                state.currentIndex--;
+                renderAll();
+                document.getElementById('questionArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function goNextLevel() {
+            if (state.currentLevel < LEVELS - 1) {
+                state.currentLevel++;
+                state.currentIndex = 0;
+                renderAll();
+                showToast(`🚩 进入第${state.currentLevel+1}关！`);
+                document.getElementById('questionArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => showRanking(), 400);
+            }
+        }
+
+        function resetAll() {
+            if (!currentUser) return;
+            if (confirm('确定重新开始吗？进度将被清零。')) {
+                state = { currentLevel: 0, currentIndex: 0, answers: new Array(TOTAL).fill(null), correctCount: 0,
+                    totalAnswered: 0 };
+                saveCurrentUserState();
+                renderAll();
+                showToast('🔄 已重置，重新开始！');
+                document.getElementById('questionArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // ============================================================
+        //  6. 排行榜
+        // ============================================================
+        function showRanking() {
+            const ranking = getRanking();
+            const me = currentUser ? currentUser.studentId : null;
+            let html = '';
+            if (ranking.length === 0) {
+                html = '<div class="no-rank">暂无闯关者，快来挑战吧！</div>';
+            } else {
+                ranking.forEach((item, index) => {
+                    const isMe = item.studentId === me;
+                    const cls = isMe ? 'rank-item me' : 'rank-item';
+                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index+1}`;
+                    html += `<div class="${cls}">
+                                <span class="pos">${medal}</span>
+                                <span class="name">${item.name} ${isMe ? '（我）' : ''}</span>
+                                <span class="scr">${item.score} 分</span>
+                            </div>`;
+                });
+            }
+            rankList.innerHTML = html;
+            rankModal.classList.add('show');
+            // 防止背景滚动
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRanking() {
+            rankModal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // ============================================================
+        //  7. Toast
+        // ============================================================
+        let toastTimer = null;
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2200);
+        }
+
+        // ============================================================
+        //  8. 事件绑定
+        // ============================================================
+        loginBtn.addEventListener('click', doLogin);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !appContainer.classList.contains('show')) {
+                doLogin();
+            }
+        });
+        logoutBtn.addEventListener('click', doLogout);
+        rankBtn.addEventListener('click', showRanking);
+        closeRankBtn.addEventListener('click', closeRanking);
+        rankModal.addEventListener('click', (e) => {
+            if (e.target === rankModal) closeRanking();
+        });
+
+        // 键盘快捷操作（手机外接键盘）
+        document.addEventListener('keydown', (e) => {
+            if (!appContainer.classList.contains('show')) return;
+            if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                const btn = document.querySelector('.action-row .btn-primary:not(:disabled)');
+                if (btn) btn.click();
+            }
+            if (e.key === 'ArrowLeft') {
+                const btn = document.querySelector('.action-row .btn-outline');
+                if (btn) btn.click();
+            }
+        });
+
+        // 滑动切换（移动端手势）
+        let touchStartX = 0;
+        let touchStartY = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            if (!appContainer.classList.contains('show')) return;
+            const dx = e.changedTouches[0].screenX - touchStartX;
+            const dy = e.changedTouches[0].screenY - touchStartY;
+            // 水平滑动 > 60px 且垂直滑动小于水平滑动的一半
+            if (Math.abs(dx) > 60 && Math.abs(dy) < Math.abs(dx) * 0.5) {
+                if (dx < 0) {
+                    // 左滑 → 下一题
+                    const btn = document.querySelector('.action-row .btn-primary:not(:disabled)');
+                    if (btn) btn.click();
+                } else if (dx > 0) {
+                    // 右滑 → 上一题
+                    const btn = document.querySelector('.action-row .btn-outline');
+                    if (btn) btn.click();
+                }
+            }
+        }, { passive: true });
+
+        // 初始化：确保登录页显示
+        loginPage.classList.remove('hidden');
+        appContainer.classList.remove('show');
+
+        console.log('🌟 红星照耀中国 · 闯关已启动！共 ' + TOTAL + ' 题');
+        console.log('📱 支持滑动切换题目，点击选项作答');
+    </script>
+
+</body>
+</html>
